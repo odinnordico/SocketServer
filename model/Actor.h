@@ -9,6 +9,7 @@ private:
 	std::string ipAddress;
 	int port;
 public:
+	Actor();
 	Actor(std::string, int);
 	virtual ~Actor();
 	int getSocket();

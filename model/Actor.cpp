@@ -1,6 +1,11 @@
 #include <string>
 #include "Actor.h"
 
+Actor::Actor(){
+	this->port = 0;
+	this->socket = 0;
+}
+
 Actor::Actor(std::string ipAddress, int port) {
 	this->ipAddress = ipAddress;
 	this->port = port;
