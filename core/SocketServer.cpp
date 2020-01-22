@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <thread>
 
 #include "SocketServer.h"
 #include "SocketClient.h"
@@ -35,10 +36,12 @@ void SocketServer::start() {
 	this->setSocketAddress();
 	this->bindAddress();
 	this->listenOnSocket();
-	this->selectActivity();
-	this->socketAddressLen = sizeof(this->socketAddress);
-	if (FD_ISSET(this->actor.getSocket(), &this->readFds)) {
-		this->serveNewClient();
+	while (1) {
+		this->selectActivity();
+		this->socketAddressLen = sizeof(this->socketAddress);
+		if (FD_ISSET(this->actor.getSocket(), &this->readFds)) {
+			std::thread thread(this->serveNewClient);
+		}
 	}
 
 }
