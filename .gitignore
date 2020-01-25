@@ -34,6 +34,8 @@
 # Eclipse
 Debug
 Debug/*
+.settings
+.settings/*
 .cproject
 .directory
 .project
