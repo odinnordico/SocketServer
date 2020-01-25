@@ -10,7 +10,7 @@ SocketClient::SocketClient() {
 	this->bufferSize = 64;
 }
 
-SocketClient::SocketClient(SocketServer &server, Actor actor, const int bufferSize) {
+SocketClient::SocketClient(SocketServer &server, Actor &actor, int &bufferSize) {
 	this->actor = actor;
 	this->bufferSize = bufferSize;
 	this->server = server;

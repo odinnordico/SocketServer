@@ -40,7 +40,7 @@ void SocketServer::start() {
 		this->selectActivity();
 		this->socketAddressLen = sizeof(this->socketAddress);
 		if (FD_ISSET(this->actor.getSocket(), &this->readFds)) {
-			std::thread thread(this->serveNewClient);
+			this->serveNewClient();
 		}
 	}
 
@@ -95,18 +95,20 @@ int SocketServer::readBuffer(char buffer[]) {
 }
 
 void SocketServer::serveNewClient() {
-	int clientSocket;
-	if ((clientSocket = accept(this->actor.getSocket(),
-			(struct sockaddr*) &this->socketAddress,
-			(socklen_t*) &this->socketAddressLen)) < 0) {
-		throw new Exception("Accept",
-				"Can not accept connection on given socket");
-	}
-	Actor clientActor(inet_ntoa(this->socketAddress.sin_addr),
-			ntohs(this->socketAddress.sin_port));
-	clientActor.setSocket(clientSocket);
-	SocketClient client(*this, clientActor, this->bufferSize);
-	client.start();
+	std::thread clientThread([](SocketServer server, int serverSocket, int sockAddresLen, sockaddr_in sockAddress, int bffSize) {
+		int clientSocket;
+		if ((clientSocket = accept(serverSocket,
+								(struct sockaddr*) &sockAddress,
+								(socklen_t*) &sockAddresLen)) < 0) {
+			throw new Exception("Accept",
+					"Can not accept connection on given socket");
+		}
+		Actor clientActor(inet_ntoa(sockAddress.sin_addr),
+				ntohs(sockAddress.sin_port));
+		clientActor.setSocket(clientSocket);
+		SocketClient socketClient(server, clientActor, bffSize);
+		socketClient.start();
+	}, this, this->actor.getSocket(), this->socketAddressLen, this->socketAddress, this->bufferSize);
 }
 
 void SocketServer::write(Message message) {

@@ -20,7 +20,7 @@ private:
 
 public:
 	SocketClient();
-	SocketClient(SocketServer&, Actor, int);
+	SocketClient(SocketServer&, Actor&, int&);
 	virtual ~SocketClient();
 
 	void start();
