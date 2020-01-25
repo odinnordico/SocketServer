@@ -9,6 +9,8 @@ class Message {
 public:
 	Message();
 	virtual ~Message();
+	std::string getAction();
+	void setAction(std::string);
 	std::string getMessage();
 	void setMessage(std::string);
 	Actor getSource();
@@ -17,6 +19,7 @@ public:
 	void setDestination(Actor);
 
 private:
+	std::string action;
 	std::string message;
 	Actor source;
 	Actor destination;

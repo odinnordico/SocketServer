@@ -3,18 +3,29 @@
 
 #include <string>
 
+#include "SocketServer.h"
 #include "../model/Actor.h"
+#include "../model/Message.h"
 
 class SocketClient {
 private:
+	SocketServer server;
 	Actor actor;
-	int id;
+	fd_set readFds;
+	int bufferSize;
+
+	int readBuffer(char[]);
+	void handleDisconnection();
+	void selectActivity();
+
 public:
-	SocketClient(Actor actor);
+	SocketClient();
+	SocketClient(SocketServer&, Actor&, int&);
 	virtual ~SocketClient();
-	int getId();
-	void setId(int);
-	void connect(Actor actor);
+
+	void start();
+	void handleNewIncome(char*, int);
+
 };
 
 #endif /* CORE_SOCKETCLIENT_H_ */

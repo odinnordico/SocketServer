@@ -1,11 +1,17 @@
 #include "Message.h"
 
-Message::Message(){
+Message::Message() {
 }
 
 Message::~Message() {
 }
 
+std::string Message::getAction() {
+	return this->action;
+}
+void Message::setAction(std::string action) {
+	this->action = action;
+}
 std::string Message::getMessage() {
 	return this->message;
 }
