@@ -1,5 +1,5 @@
-#ifndef CORE_SOCKETSERVER_H_
-#define CORE_SOCKETSERVER_H_
+#ifndef CORE_SERVER_H_
+#define CORE_SERVER_H_
 
 #include <string>
 #include <netinet/in.h>
@@ -7,13 +7,13 @@
 #include "../model/Actor.h"
 #include "../model/Message.h"
 
-class SocketServer {
+class Server {
 private:
 	Actor actor;
 	int socketOptions;
 	struct sockaddr_in socketAddress;
 	int maxQueueBacklogToListen;
-	fd_set readFds;
+	fd_set readFds;    //bag empall
 	int bufferSize;
 	int socketAddressLen;
 
@@ -27,9 +27,9 @@ private:
 	int readBuffer(char[]);
 
 public:
-	SocketServer();
-	SocketServer(Actor, int);
-	virtual ~SocketServer();
+	Server();
+	Server(Actor, int);
+	virtual ~Server();
 	void start();
 	void stop();
 	void write(Message);
@@ -38,4 +38,4 @@ public:
 	void setMaxQueueBacklogToListen(int);
 };
 
-#endif /* CORE_SOCKETSERVER_H_ */
+#endif /* CORE_SERVER_H_ */

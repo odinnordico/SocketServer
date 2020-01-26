@@ -1,10 +1,3 @@
-/*
- * constants.h
- *
- *  Created on: Jan 15, 2020
- *      Author: diegoa
- */
-
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 

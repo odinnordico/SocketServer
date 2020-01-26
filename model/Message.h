@@ -6,6 +6,11 @@
 #include "Actor.h"
 
 class Message {
+private:
+	std::string action;
+	std::string message;
+	Actor source;
+	Actor destination;
 public:
 	Message();
 	virtual ~Message();
@@ -18,11 +23,7 @@ public:
 	Actor getDestination();
 	void setDestination(Actor);
 
-private:
-	std::string action;
-	std::string message;
-	Actor source;
-	Actor destination;
+
 };
 
 #endif /* MODEL_MESSAGE_H_ */

@@ -1,15 +1,15 @@
-#ifndef CORE_SOCKETCLIENT_H_
-#define CORE_SOCKETCLIENT_H_
+#ifndef CORE_CLIENT_H_
+#define CORE_CLIENT_H_
 
 #include <string>
 
-#include "SocketServer.h"
 #include "../model/Actor.h"
 #include "../model/Message.h"
+#include "Server.h"
 
-class SocketClient {
+class Client {
 private:
-	SocketServer server;
+	Server server;
 	Actor actor;
 	fd_set readFds;
 	int bufferSize;
@@ -19,13 +19,13 @@ private:
 	void selectActivity();
 
 public:
-	SocketClient();
-	SocketClient(SocketServer&, Actor&, int&);
-	virtual ~SocketClient();
+	Client();
+	Client(Server&, Actor&, int&);
+	virtual ~Client();
 
 	void start();
 	void handleNewIncome(char*, int);
 
 };
 
-#endif /* CORE_SOCKETCLIENT_H_ */
+#endif /* CORE_CLIENT_H_ */

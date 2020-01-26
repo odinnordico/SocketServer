@@ -15,7 +15,7 @@ Message BufferToMessageTranslator::translateBuffer(char *buffer) {
 	json jsonMessage = json::parse(buffer);
 	Message message;
 	message.setAction(jsonMessage[LABEL_ACTION].dump(JSON_IDENTATION));
-	message.setMessage(jsonMessage[LABEL_CLIENT].dump(JSON_IDENTATION));
+	message.setMessage(jsonMessage[LABEL_MSG].dump(JSON_IDENTATION));
 	message.setSource(
 			BufferToMessageTranslator::getActorFromJson(LABEL_SOURCE,
 					jsonMessage));
@@ -46,13 +46,9 @@ std::string BufferToMessageTranslator::translateMessage(Message message) {
 
 Actor BufferToMessageTranslator::getActorFromJson(const char *origination,
 		json jsonMessage) {
-	std::string ipAddress = jsonMessage[origination][LABEL_IP].dump(
-			JSON_IDENTATION);
-	int port = std::atoi(
-			jsonMessage[origination][LABEL_PORT].dump(JSON_IDENTATION).c_str());
-	int socket = std::atoi(
-			jsonMessage[origination][LABEL_PORT].dump(JSON_IDENTATION).c_str());
-
+	std::string ipAddress = jsonMessage[origination][LABEL_IP].dump(JSON_IDENTATION);
+	int port = std::atoi(jsonMessage[origination][LABEL_PORT].dump(JSON_IDENTATION).c_str());
+	int socket = std::atoi(jsonMessage[origination][LABEL_SOCKET].dump(JSON_IDENTATION).c_str());
 	Actor actor(ipAddress, port);
 	actor.setSocket(socket);
 	return actor;
