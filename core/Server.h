@@ -2,6 +2,8 @@
 #define CORE_SERVER_H_
 
 #include <string>
+#include <vector>
+#include <thread>
 #include <netinet/in.h>
 
 #include "../model/Actor.h"
@@ -16,6 +18,7 @@ private:
 	fd_set readFds;    //bag empall
 	int bufferSize;
 	int socketAddressLen;
+	//std::vector<std::thread> clients;
 
 	void createSocket();
 	void setSocketOptions();
@@ -36,6 +39,7 @@ public:
 
 	int getMaxQueueBacklogToListen();
 	void setMaxQueueBacklogToListen(int);
+	Actor getActor();
 };
 
 #endif /* CORE_SERVER_H_ */

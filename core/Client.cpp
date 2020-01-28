@@ -8,6 +8,7 @@
 #include "../model/Message.h"
 #include "../translator/BufferToMessageTranslator.h"
 #include "../exception/Exception.h"
+#include "../constants/constants.h"
 
 Client::Client() {
 	this->bufferSize = 64;
@@ -27,17 +28,28 @@ void Client::start() {
 	FD_SET(this->actor.getSocket(), &this->readFds);
 
 	char buffer[this->bufferSize];
+	this->welcomeClient();
 	while (1) {
 		this->selectActivity();
 		if (FD_ISSET(this->actor.getSocket(), &this->readFds)) {
 			int readedValue = this->readBuffer(buffer);
 			if (readedValue == 0) {
 				this->handleDisconnection();
+				break;
 			} else {
 				this->handleNewIncome(buffer, readedValue);
 			}
 		}
 	}
+}
+
+void Client::welcomeClient(){
+	Message welcomeMessage;
+	welcomeMessage.setAction(CHAT_ACTION_START);
+	welcomeMessage.setMessage(CHAT_ACTION_START);
+	welcomeMessage.setDestination(this->actor);
+	welcomeMessage.setSource(this->server.getActor());
+	this->server.write(welcomeMessage);
 }
 
 void Client::selectActivity() {
@@ -58,11 +70,14 @@ void Client::handleDisconnection() {
 			<< this->actor.getIpAddress() << "\n\tPORT: "
 			<< this->actor.getPort() << std::endl;
 	close(this->actor.getSocket());
-	throw new Exception("Client off","Cliente desconectado");
 }
 
 void Client::handleNewIncome(char *buffer, int readedValue) {
 	buffer[readedValue] = '\0';
 	Message message = BufferToMessageTranslator::translateBuffer(buffer);
-	server.write(message);
+	if(message.getDestination().getSocket() > 0){
+		this->server.write(message);
+	} else {
+		std::cout << buffer << std::endl;
+	}
 }

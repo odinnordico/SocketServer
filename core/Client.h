@@ -17,6 +17,7 @@ private:
 	int readBuffer(char[]);
 	void handleDisconnection();
 	void selectActivity();
+	void welcomeClient();
 
 public:
 	Client();

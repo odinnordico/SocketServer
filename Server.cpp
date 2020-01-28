@@ -1,13 +1,21 @@
+#include <iostream>
+
 #include "model/Actor.h"
 #include "translator/BufferToMessageTranslator.h"
 #include "exception/Exception.h"
 #include "core/Server.h"
 
-int main(){
-	Actor actor("",3300);
-	Server server(actor,1024);
-	server.start();
-
+int main() {
+	try {
+		int port = 3301;
+		std::cout << "Used port: " << port << std::endl;
+		Actor actor("", port);
+		Server server(actor, 1024);
+		server.start();
+	} catch (Exception &e) {
+		std::cout << e.toString() << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	exit(EXIT_SUCCESS);
 }
-
 

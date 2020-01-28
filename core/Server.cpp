@@ -1,10 +1,10 @@
 #include "Server.h"
 
+#include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <thread>
 
 #include "../exception/Exception.h"
 #include "../translator/BufferToMessageTranslator.h"
@@ -37,14 +37,19 @@ void Server::start() {
 	this->setSocketAddress();
 	this->bindAddress();
 	this->listenOnSocket();
+
+	std::cout << "Started Server" << std::endl;
 	while (1) {
 		this->selectActivity();
 		this->socketAddressLen = sizeof(this->socketAddress);
 		if (FD_ISSET(this->actor.getSocket(), &this->readFds)) {
-			this->serveNewClient();
+			try {
+				this->serveNewClient();
+			} catch (Exception &e) {
+				std::perror(e.toString());
+			}
 		}
 	}
-
 }
 
 void Server::createSocket() {
@@ -75,6 +80,7 @@ void Server::bindAddress() {
 		throw new Exception("Bind",
 				"Unable to bind this socket to given address");
 	}
+
 }
 
 void Server::listenOnSocket() {
@@ -87,8 +93,7 @@ void Server::listenOnSocket() {
 void Server::selectActivity() {
 	if (select(this->actor.getSocket() + 1, &this->readFds, NULL,
 	NULL, NULL) < 0 && errno != EINTR) {
-		perror("Error on select to wait for activity");
-
+		std::cout << "ERROR: Error on select to wait for activity" << std::endl;
 	}
 }
 
@@ -97,28 +102,37 @@ int Server::readBuffer(char buffer[]) {
 }
 
 void Server::serveNewClient() {
-	std::thread clientThread([](Server server, int serverSocket, int sockAddresLen, sockaddr_in sockAddress, int bffSize) {
-		int clientSocket;
-		if ((clientSocket = accept(serverSocket,
-								(struct sockaddr*) &sockAddress,
-								(socklen_t*) &sockAddresLen)) < 0) {
-			throw new Exception("Accept",
-					"Can not accept connection on given socket");
-		}
-		Actor clientActor(inet_ntoa(sockAddress.sin_addr),
-				ntohs(sockAddress.sin_port));
-		clientActor.setSocket(clientSocket);
-		Client socketClient(server, clientActor, bffSize);
-		socketClient.start();
-	}, this, this->actor.getSocket(), this->socketAddressLen, this->socketAddress, this->bufferSize);
+	std::thread clientThread(
+			[](Server *server, int serverSocket, int sockAddresLen,
+					sockaddr_in sockAddress, int bffSize) {
+				try {
+					int clientSocket;
+					if ((clientSocket = accept(serverSocket,
+							(struct sockaddr*) &sockAddress,
+							(socklen_t*) &sockAddresLen)) < 0) {
+						throw new Exception("Accept",
+								"Can not accept connection on given socket");
+					}
+					Actor clientActor(inet_ntoa(sockAddress.sin_addr),
+							ntohs(sockAddress.sin_port));
+
+					clientActor.setSocket(clientSocket);
+					Client socketClient(*server, clientActor, bffSize);
+					socketClient.start();
+				} catch (Exception &e) {
+					std::cout << e.toString() << std::endl;
+				}
+			}, this, this->actor.getSocket(), this->socketAddressLen,
+			this->socketAddress, this->bufferSize);
+	//this->clients.push_back(std::move(clientThread));
+	clientThread.detach();
 }
 
 void Server::write(Message message) {
-	const char *messageToSend = BufferToMessageTranslator::translateMessage(
-			message).c_str();
-	int messageToSentLen = strlen(messageToSend);
+	std::string messageToSend = BufferToMessageTranslator::translateMessage(message);
+	int messageToSentLen = messageToSend.length();
 	int socket = message.getDestination().getSocket();  //. = from
-	send(socket, messageToSend, messageToSentLen, 0);
+	send(socket, messageToSend.c_str(), messageToSentLen, 0);
 }
 
 int Server::getMaxQueueBacklogToListen() {
@@ -126,6 +140,10 @@ int Server::getMaxQueueBacklogToListen() {
 }
 void Server::setMaxQueueBacklogToListen(int maxQueueBacklogToListen) {
 	this->maxQueueBacklogToListen = maxQueueBacklogToListen;
+}
+
+Actor Server::getActor() {
+	return this->actor;
 }
 
 void Server::stop() {

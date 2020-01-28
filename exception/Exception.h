@@ -13,6 +13,7 @@ public:
 
 	std::string getSummary();
 	std::string getMessage();
+	const char* toString();
 
 };
 
