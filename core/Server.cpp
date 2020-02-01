@@ -6,10 +6,10 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <thread>
+#include <array>
 
 #include "../exception/Exception.h"
 #include "../translator/BufferToMessageTranslator.h"
-#include "../constants/constants.h"
 #include "Client.h"
 
 Server::Server() {
@@ -17,6 +17,10 @@ Server::Server() {
 	this->maxQueueBacklogToListen = 10;
 	this->bufferSize = 64;
 	this->socketAddressLen = 0;
+	for (int i = 0; i < MAX_CLIENTS_ALLOWED; i++) {
+		this->clients[i] = 0;
+	}
+
 }
 
 Server::Server(Actor actor, int bufferSize) {
@@ -27,6 +31,9 @@ Server::Server(Actor actor, int bufferSize) {
 	this->socketAddressLen = 0;
 
 	FD_ZERO(&this->readFds);
+	for (int i = 0; i < MAX_CLIENTS_ALLOWED; i++) {
+		this->clients[i] = 0;
+	}
 
 }
 
@@ -104,10 +111,9 @@ int Server::readBuffer(char buffer[]) {
 }
 
 void Server::serveNewClient() {
-	Client socketClient;
 	std::thread clientThread(
 			[](Server *server, int serverSocket, int sockAddresLen,
-					sockaddr_in sockAddress, int bffSize, Client client) {
+					sockaddr_in sockAddress, int bffSize) {
 				try {
 					int clientSocket;
 					if ((clientSocket = accept(serverSocket,
@@ -116,20 +122,22 @@ void Server::serveNewClient() {
 						throw new Exception("Accept",
 								"Can not accept connection on given socket");
 					}
+					Server s = *server;
+					s.addClientSocket(clientSocket);
 					Actor clientActor(inet_ntoa(sockAddress.sin_addr),
 							ntohs(sockAddress.sin_port));
-
+					Client client;
 					clientActor.setSocket(clientSocket);
-					client.init(*server, clientActor, bffSize);
-					client.start();
+					client.init(clientActor, bffSize);
+					client.start(s);
 				} catch (Exception &e) {
 					std::cout << e.toString() << std::endl;
 				}
 			}, this, this->actor.getSocket(), this->socketAddressLen,
-			this->socketAddress, this->bufferSize, socketClient);
+			this->socketAddress, this->bufferSize);
 	//this->clients.push_back(std::move(clientThread));
 	clientThread.detach();
-	this->clients.push_back(socketClient.getActor());
+
 }
 
 void Server::write(Message message) {
@@ -139,12 +147,12 @@ void Server::write(Message message) {
 	int socket = message.getDestination().getSocket();  //. = from
 	if (socket == DESTINATION_BROADCAST) {
 		std::cout << "Broadcasting message: " << std::endl;
-		for (int i = 0; i < (int) (this->clients.size()); ++i) {
-			int clientSocket = this->clients.at(i).getSocket();
-			std::cout << "Sending message to (" << i << ") socket: "
-					<< clientSocket << std::endl;
-			send(this->clients.at(i).getSocket(), messageToSend.c_str(),
-					messageToSentLen, 0);
+		for (int i = 0; i < MAX_CLIENTS_ALLOWED; i++) {
+			std::cout << "ESCANDALAA -  " << i << std::endl;
+			if (this->clients[i] > 0) {
+				send(this->clients[i], messageToSend.c_str(), messageToSentLen,
+						0);
+			}
 		}
 	} else {
 		send(socket, messageToSend.c_str(), messageToSentLen, 0);
@@ -152,13 +160,7 @@ void Server::write(Message message) {
 }
 
 void Server::stopClient(Actor actor) {
-	int i;
-	for (i = 0; i < (int) (this->clients.size()); ++i) {
-		if (this->clients.at(i).getSocket() == actor.getSocket()) {
-			break;
-		}
-	}
-	this->clients.erase(this->clients.begin() + i);
+	this->removeClientSocket(actor.getSocket());
 	close(actor.getSocket());
 }
 
@@ -175,5 +177,22 @@ Actor Server::getActor() {
 
 void Server::stop() {
 	close(this->actor.getSocket());
+}
+
+void Server::addClientSocket(int socket) {
+	for (int i = 0; i < MAX_CLIENTS_ALLOWED; i++) {
+		if (this->clients[i] == 0) {
+			this->clients[i] = socket;
+			break;
+		}
+	}
+}
+void Server::removeClientSocket(int socket) {
+	for (int i = 0; i < MAX_CLIENTS_ALLOWED; i++) {
+		if (this->clients[i] == socket) {
+			this->clients[i] = 0;
+			break;
+		}
+	}
 }
 

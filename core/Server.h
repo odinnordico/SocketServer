@@ -2,11 +2,12 @@
 #define CORE_SERVER_H_
 
 #include <string>
-#include <vector>
+//#include <vector>
 #include <netinet/in.h>
 
 #include "../model/Actor.h"
 #include "../model/Message.h"
+#include "../constants/constants.h"
 
 class Server {
 private:
@@ -17,7 +18,7 @@ private:
 	fd_set readFds;    //bag empall
 	int bufferSize;
 	int socketAddressLen;
-	std::vector<Actor> clients;
+	int clients[MAX_CLIENTS_ALLOWED];
 
 	void createSocket();
 	void setSocketOptions();
@@ -41,6 +42,8 @@ public:
 	int getMaxQueueBacklogToListen();
 	void setMaxQueueBacklogToListen(int);
 	Actor getActor();
+	void addClientSocket(int);
+	void removeClientSocket(int);
 };
 
 #endif /* CORE_SERVER_H_ */

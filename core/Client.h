@@ -9,24 +9,23 @@
 
 class Client {
 private:
-	Server server;
 	Actor actor;
 	fd_set readFds;
 	int bufferSize;
 
 	int readBuffer(char[]);
-	void handleDisconnection();
+	void handleDisconnection(Server&);
 	void selectActivity();
-	void welcomeClient();
+	void welcomeClient(Server&);
 
 public:
 	Client();
-	Client(Server&, Actor&, int&);
-	void init(Server&, Actor&, int&);
+	Client(Actor&, int&);
+	void init(Actor&, int&);
 	virtual ~Client();
 
-	void start();
-	void handleNewIncome(char*, int);
+	void start(Server&);
+	void handleNewIncome(Server&, char*, int);
 	Actor getActor();
 
 };

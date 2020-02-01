@@ -5,6 +5,7 @@
 
 const int JSON_IDENTATION = 2;
 const int DESTINATION_BROADCAST = INT_MAX;
+const int MAX_CLIENTS_ALLOWED = 100;
 
 static const char* const CHAT_ACTION_ACK = "ACK";
 static const char* const CHAT_ACTION_START = "START";

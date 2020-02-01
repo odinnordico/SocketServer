@@ -14,46 +14,45 @@ Client::Client() {
 	this->bufferSize = 64;
 }
 
-Client::Client(Server &server, Actor &actor, int &bufferSize) {
-	this->init(server, actor, bufferSize);
+Client::Client(Actor &actor, int &bufferSize) {
+	this->init(actor, bufferSize);
 }
 
-void Client::init(Server &server, Actor &actor, int &bufferSize) {
+void Client::init(Actor &actor, int &bufferSize) {
 	this->actor = actor;
 	this->bufferSize = bufferSize;
-	this->server = server;
 	FD_ZERO(&this->readFds);
 }
 
 Client::~Client() {
 }
 
-void Client::start() {
+void Client::start(Server &server) {
 	FD_SET(this->actor.getSocket(), &this->readFds);
 
 	char buffer[this->bufferSize];
-	this->welcomeClient();
+	this->welcomeClient(server);
 	while (1) {
 		this->selectActivity();
 		if (FD_ISSET(this->actor.getSocket(), &this->readFds)) {
 			int readedValue = this->readBuffer(buffer);
 			if (readedValue == 0) {
-				this->handleDisconnection();
+				this->handleDisconnection(server);
 				break;
 			} else {
-				this->handleNewIncome(buffer, readedValue);
+				this->handleNewIncome(server, buffer, readedValue);
 			}
 		}
 	}
 }
 
-void Client::welcomeClient() {
+void Client::welcomeClient(Server &server) {
 	Message welcomeMessage;
 	welcomeMessage.setAction(CHAT_ACTION_START);
 	welcomeMessage.setMessage(CHAT_ACTION_START);
 	welcomeMessage.setDestination(this->actor);
-	welcomeMessage.setSource(this->server.getActor());
-	this->server.write(welcomeMessage);
+	welcomeMessage.setSource(server.getActor());
+	server.write(welcomeMessage);
 }
 
 void Client::selectActivity() {
@@ -68,20 +67,20 @@ int Client::readBuffer(char buffer[]) {
 	return read(this->actor.getSocket(), buffer, this->bufferSize);
 }
 
-void Client::handleDisconnection() {
+void Client::handleDisconnection(Server &server) {
 	std::cout << "Host disconnected:" << "\n\tSOCKET: "
 			<< this->actor.getSocket() << "\n\tIP: "
 			<< this->actor.getIpAddress() << "\n\tPORT: "
 			<< this->actor.getPort() << std::endl;
-	this->server.stopClient(this->actor);
+	server.stopClient(this->actor);
 }
 
-void Client::handleNewIncome(char *buffer, int readedValue) {
+void Client::handleNewIncome(Server &server, char *buffer, int readedValue) {
 	if (readedValue > 2) {
 		buffer[readedValue] = '\0';
 		Message message = BufferToMessageTranslator::translateBuffer(buffer);
 		if (message.getDestination().getSocket() > 0) {
-			this->server.write(message);
+			server.write(message);
 		} else {
 			std::cout << buffer << std::endl;
 		}
