@@ -5,9 +5,11 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <thread>
 
 #include "../exception/Exception.h"
 #include "../translator/BufferToMessageTranslator.h"
+#include "../constants/constants.h"
 #include "Client.h"
 
 Server::Server() {
@@ -102,9 +104,10 @@ int Server::readBuffer(char buffer[]) {
 }
 
 void Server::serveNewClient() {
+	Client socketClient;
 	std::thread clientThread(
 			[](Server *server, int serverSocket, int sockAddresLen,
-					sockaddr_in sockAddress, int bffSize) {
+					sockaddr_in sockAddress, int bffSize, Client client) {
 				try {
 					int clientSocket;
 					if ((clientSocket = accept(serverSocket,
@@ -117,22 +120,46 @@ void Server::serveNewClient() {
 							ntohs(sockAddress.sin_port));
 
 					clientActor.setSocket(clientSocket);
-					Client socketClient(*server, clientActor, bffSize);
-					socketClient.start();
+					client.init(*server, clientActor, bffSize);
+					client.start();
 				} catch (Exception &e) {
 					std::cout << e.toString() << std::endl;
 				}
 			}, this, this->actor.getSocket(), this->socketAddressLen,
-			this->socketAddress, this->bufferSize);
+			this->socketAddress, this->bufferSize, socketClient);
 	//this->clients.push_back(std::move(clientThread));
 	clientThread.detach();
+	this->clients.push_back(socketClient.getActor());
 }
 
 void Server::write(Message message) {
-	std::string messageToSend = BufferToMessageTranslator::translateMessage(message);
+	std::string messageToSend = BufferToMessageTranslator::translateMessage(
+			message);
 	int messageToSentLen = messageToSend.length();
 	int socket = message.getDestination().getSocket();  //. = from
-	send(socket, messageToSend.c_str(), messageToSentLen, 0);
+	if (socket == DESTINATION_BROADCAST) {
+		std::cout << "Broadcasting message: " << std::endl;
+		for (int i = 0; i < (int) (this->clients.size()); ++i) {
+			int clientSocket = this->clients.at(i).getSocket();
+			std::cout << "Sending message to (" << i << ") socket: "
+					<< clientSocket << std::endl;
+			send(this->clients.at(i).getSocket(), messageToSend.c_str(),
+					messageToSentLen, 0);
+		}
+	} else {
+		send(socket, messageToSend.c_str(), messageToSentLen, 0);
+	}
+}
+
+void Server::stopClient(Actor actor) {
+	int i;
+	for (i = 0; i < (int) (this->clients.size()); ++i) {
+		if (this->clients.at(i).getSocket() == actor.getSocket()) {
+			break;
+		}
+	}
+	this->clients.erase(this->clients.begin() + i);
+	close(actor.getSocket());
 }
 
 int Server::getMaxQueueBacklogToListen() {

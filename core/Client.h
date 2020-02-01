@@ -22,10 +22,12 @@ private:
 public:
 	Client();
 	Client(Server&, Actor&, int&);
+	void init(Server&, Actor&, int&);
 	virtual ~Client();
 
 	void start();
 	void handleNewIncome(char*, int);
+	Actor getActor();
 
 };
 

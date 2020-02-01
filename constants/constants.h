@@ -1,7 +1,10 @@
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 
+#include <limits.h>
+
 const int JSON_IDENTATION = 2;
+const int DESTINATION_BROADCAST = INT_MAX;
 
 static const char* const CHAT_ACTION_ACK = "ACK";
 static const char* const CHAT_ACTION_START = "START";

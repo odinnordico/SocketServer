@@ -23,7 +23,7 @@ Message BufferToMessageTranslator::translateBuffer(char *buffer) {
 		Actor destination = BufferToMessageTranslator::getActorFromJson(LABEL_DESTINATION,
 				jsonMessage);
 		message.setDestination(destination);
-	} catch (json::parse_error &e) {
+	} catch (std::exception &e) {
 		std::cout << "ERROR: Unable to parse: " << buffer << std::endl;
 	}
 	return message;

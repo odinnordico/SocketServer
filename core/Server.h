@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include <thread>
 #include <netinet/in.h>
 
 #include "../model/Actor.h"
@@ -18,7 +17,7 @@ private:
 	fd_set readFds;    //bag empall
 	int bufferSize;
 	int socketAddressLen;
-	//std::vector<std::thread> clients;
+	std::vector<Actor> clients;
 
 	void createSocket();
 	void setSocketOptions();
@@ -36,6 +35,8 @@ public:
 	void start();
 	void stop();
 	void write(Message);
+	void stopClient(Actor);
+
 
 	int getMaxQueueBacklogToListen();
 	void setMaxQueueBacklogToListen(int);

@@ -15,6 +15,10 @@ Client::Client() {
 }
 
 Client::Client(Server &server, Actor &actor, int &bufferSize) {
+	this->init(server, actor, bufferSize);
+}
+
+void Client::init(Server &server, Actor &actor, int &bufferSize) {
 	this->actor = actor;
 	this->bufferSize = bufferSize;
 	this->server = server;
@@ -43,7 +47,7 @@ void Client::start() {
 	}
 }
 
-void Client::welcomeClient(){
+void Client::welcomeClient() {
 	Message welcomeMessage;
 	welcomeMessage.setAction(CHAT_ACTION_START);
 	welcomeMessage.setMessage(CHAT_ACTION_START);
@@ -69,15 +73,21 @@ void Client::handleDisconnection() {
 			<< this->actor.getSocket() << "\n\tIP: "
 			<< this->actor.getIpAddress() << "\n\tPORT: "
 			<< this->actor.getPort() << std::endl;
-	close(this->actor.getSocket());
+	this->server.stopClient(this->actor);
 }
 
 void Client::handleNewIncome(char *buffer, int readedValue) {
-	buffer[readedValue] = '\0';
-	Message message = BufferToMessageTranslator::translateBuffer(buffer);
-	if(message.getDestination().getSocket() > 0){
-		this->server.write(message);
-	} else {
-		std::cout << buffer << std::endl;
+	if (readedValue > 2) {
+		buffer[readedValue] = '\0';
+		Message message = BufferToMessageTranslator::translateBuffer(buffer);
+		if (message.getDestination().getSocket() > 0) {
+			this->server.write(message);
+		} else {
+			std::cout << buffer << std::endl;
+		}
 	}
+}
+
+Actor Client::getActor() {
+	return this->actor;
 }
