@@ -38,7 +38,6 @@ public:
 	void write(Message);
 	void stopClient(Actor);
 
-
 	int getMaxQueueBacklogToListen();
 	void setMaxQueueBacklogToListen(int);
 	Actor getActor();

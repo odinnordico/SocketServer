@@ -23,7 +23,6 @@ public:
 	Actor getDestination();
 	void setDestination(Actor);
 
-
 };
 
 #endif /* MODEL_MESSAGE_H_ */

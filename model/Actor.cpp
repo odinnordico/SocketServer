@@ -1,7 +1,7 @@
 #include <string>
 #include "Actor.h"
 
-Actor::Actor(){
+Actor::Actor() {
 	this->port = 0;
 	this->socket = 0;
 }
